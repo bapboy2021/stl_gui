@@ -1,0 +1,4 @@
+PyQt6
+open3d
+python-xlib
+numpy

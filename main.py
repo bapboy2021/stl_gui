@@ -2,8 +2,15 @@ import os
 os.environ.pop("WAYLAND_DISPLAY", None)  # force XWayland; native Wayland crashes Open3D's XSendEvent calls
 
 import sys
+import qdarktheme
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QSettings
 from py_qt.main_window import MainWindow
+
+
+def apply_theme(app: QApplication, theme: str):
+    """theme: 'dark' | 'light'"""
+    app.setStyleSheet(qdarktheme.load_stylesheet(theme))
 
 
 def demo_o3d():
@@ -32,6 +39,10 @@ if __name__ == "__main__":
         demo_o3d()
     else:
         app = QApplication(sys.argv)
-        win = MainWindow()
+
+        saved_theme = QSettings("STLViewer", "MainWindow").value("theme", "dark")
+        apply_theme(app, saved_theme)
+
+        win = MainWindow(app, apply_theme)
         win.show()
         sys.exit(app.exec())

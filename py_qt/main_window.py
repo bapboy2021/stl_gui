@@ -11,8 +11,11 @@ from custom_primitives import GridFloor, AxisLines
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, app: QApplication, apply_theme_fn):
         super().__init__()
+        self._app = app
+        self._apply_theme = apply_theme_fn
+
         self.setWindowTitle("STL Viewer")
         self.resize(1400, 900)
         self.setDockNestingEnabled(True)
@@ -48,6 +51,20 @@ class MainWindow(QMainWindow):
 
         # View — dock/toolbar toggles are added later in _setup_docks/_setup_toolbar
         self._view_menu = mb.addMenu("&View")
+
+        # Theme
+        theme_menu = mb.addMenu("&Theme")
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+        current = QSettings("STLViewer", "MainWindow").value("theme", "dark")
+        for theme in ("dark", "light"):
+            act = QAction(theme.capitalize(), self)
+            act.setCheckable(True)
+            act.setChecked(theme == current)
+            act.setData(theme)
+            act.triggered.connect(lambda checked, t=theme: self._set_theme(t))
+            theme_group.addAction(act)
+            theme_menu.addAction(act)
 
     # --------------------------------------------------------------- toolbar
 
@@ -135,6 +152,10 @@ class MainWindow(QMainWindow):
         return dock
 
     # --------------------------------------------------------------- actions
+
+    def _set_theme(self, theme: str):
+        self._apply_theme(self._app, theme)
+        QSettings("STLViewer", "MainWindow").setValue("theme", theme)
 
     def _open_stl(self):
         path, _ = QFileDialog.getOpenFileName(

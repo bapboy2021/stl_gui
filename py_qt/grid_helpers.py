@@ -132,14 +132,15 @@ def _grid_texture(
         n += 1
     draw_lines(x_lines, "x")
 
-    # Z lines
+    # Z lines — pz counts from tex_size-1 (z_min, UV v=0) toward 0 (z_max, UV v=1)
+    # OpenGL UV v=0 is the image bottom, so z_min must live at row tex_size-1.
     z_lines, z_major = [], []
     n = 0
     while True:
         z = z_min + n * z_step
         if z > z_max + 1e-9:
             break
-        pz = round((z - z_min) / z_range * (tex_size - 1))
+        pz = (tex_size - 1) - round((z - z_min) / z_range * (tex_size - 1))
         is_major = (n % major_every == 0)
         z_lines.append((pz, is_major))
         if is_major:
@@ -156,8 +157,11 @@ def _grid_texture(
 
 def _bake_labels(img_np, x_major, z_major, tex_size,
                  x_step, z_step, x_range, z_range, major_every, bg_color):
-    """Draw major-line labels onto the texture using PIL. Labels on all 4 edges."""
-    # Font size proportional to major-line spacing, capped to stay readable
+    """
+    Bake labels onto bottom edge (X values) and left edge (Z values).
+    x_major[0] and z_major[0] are both at the bottom-left corner, so both
+    are skipped to leave the corner clean.
+    """
     major_px = min(
         (major_every * x_step / x_range) * tex_size,
         (major_every * z_step / z_range) * tex_size,
@@ -174,17 +178,22 @@ def _bake_labels(img_np, x_major, z_major, tex_size,
 
     def put(x, y, text, anchor):
         bb = draw.textbbox((x, y), text, font=font, anchor=anchor)
+        # Nudge so the padded box never bleeds outside the image
+        dx = max(0, bb[2] + pad - tex_size) - max(0, pad - bb[0])
+        dy = max(0, bb[3] + pad - tex_size) - max(0, pad - bb[1])
+        x -= dx; y -= dy
+        bb = draw.textbbox((x, y), text, font=font, anchor=anchor)
         draw.rectangle([bb[0]-pad, bb[1]-pad, bb[2]+pad, bb[3]+pad], fill=bg)
         draw.text((x, y), text, font=font, fill=fg, anchor=anchor)
 
-    # X labels — top edge (z_min world) and bottom edge (z_max world)
-    for px, s in x_major:
-        put(px, pad,            s, "mt")
+    # X labels — bottom edge only (row tex_size, which is z_min / UV v=0)
+    # Skip x_major[0] (x_min, px=0) — that's the bottom-left corner
+    for px, s in x_major[1:]:
         put(px, tex_size - pad, s, "mb")
 
-    # Z labels — left edge (x_min world) and right edge (x_max world)
-    for pz, s in z_major:
-        put(pad,            pz, s, "lm")
-        put(tex_size - pad, pz, s, "rm")
+    # Z labels — left edge only (col 0, which is x_min / UV u=0)
+    # Skip z_major[0] (z_min, pz=tex_size-1) — that's the bottom-left corner
+    for pz, s in z_major[1:]:
+        put(pad, pz, s, "lm")
 
     return np.array(img_pil)

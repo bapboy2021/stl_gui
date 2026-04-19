@@ -124,8 +124,9 @@ class GridFloor:
             else:
                 img[lo:hi, :] = color
 
-        # X lines — columns in the texture map to world X
-        x_major = []
+        # Collect all line positions first, then draw minor before major so
+        # major lines always paint over minor lines at intersections.
+        x_lines, x_major = [], []
         n = 0
         while True:
             x = x_min + n * self.x_step
@@ -133,13 +134,13 @@ class GridFloor:
                 break
             px = round((x - x_min) / x_range * (ts - 1))
             is_major = (n % self.major_every == 0)
-            draw_stripe(px, is_major, "x")
+            x_lines.append((px, is_major))
             if is_major:
                 x_major.append((px, f"{x:g}"))
             n += 1
 
         # Z lines — pz is inverted so z_min lives at row ts-1 (UV v=0 in OpenGL)
-        z_major = []
+        z_lines, z_major = [], []
         n = 0
         while True:
             z = z_min + n * self.z_step
@@ -147,10 +148,23 @@ class GridFloor:
                 break
             pz = (ts - 1) - round((z - z_min) / z_range * (ts - 1))
             is_major = (n % self.major_every == 0)
-            draw_stripe(pz, is_major, "z")
+            z_lines.append((pz, is_major))
             if is_major:
                 z_major.append((pz, f"{z:g}"))
             n += 1
+
+        for px, is_major in x_lines:
+            if not is_major:
+                draw_stripe(px, False, "x")
+        for pz, is_major in z_lines:
+            if not is_major:
+                draw_stripe(pz, False, "z")
+        for px, is_major in x_lines:
+            if is_major:
+                draw_stripe(px, True, "x")
+        for pz, is_major in z_lines:
+            if is_major:
+                draw_stripe(pz, True, "z")
 
         if self.show_labels and x_major and z_major:
             img = self._bake_labels(img, x_major, z_major)

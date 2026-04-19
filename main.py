@@ -7,7 +7,7 @@ import open3d as o3d
 import open3d.visualization.rendering as rendering
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from py_qt.viewer_widget import Open3DViewerWidget
-from py_qt.grid_helpers import make_grid_floor, make_axis_lines
+from custom_primitives import GridFloor, AxisLines
 
 
 class MainWindow(QMainWindow):
@@ -21,16 +21,16 @@ class MainWindow(QMainWindow):
         self._load_demo()
 
     def _load_demo(self):
-        grid_mesh, grid_mat = make_grid_floor(
+        grid = GridFloor(
             x_bounds=(-10, 10),
             z_bounds=(-10, 10),
             x_step=1.0,
             z_step=1.0,
         )
-        self._viewer.add_geometry("grid_floor", grid_mesh, grid_mat)
+        self._viewer.add_geometry("grid_floor", grid.geometry, grid.material)
 
-        axis_ls, axis_mat = make_axis_lines(length=0.25)
-        self._viewer.add_geometry("axis", axis_ls, axis_mat)
+        axis = AxisLines(length=0.25)
+        self._viewer.add_geometry("axis", axis.geometry, axis.material)
 
         box = o3d.geometry.TriangleMesh.create_box()
         box.compute_vertex_normals()

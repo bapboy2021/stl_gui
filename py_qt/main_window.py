@@ -9,6 +9,23 @@ from py_qt.viewer_widget import Open3DViewerWidget
 from py_qt.panels import ToolsPanel, ScenePanel, PropertiesPanel
 from custom_primitives import GridFloor, AxisLines
 
+_THEME_PRESETS = {
+    "dark": {
+        "viewer_bg":  [0.12, 0.12, 0.12, 1.0],
+        "grid_bg":    (30,  30,  30),
+        "grid_minor": (70,  70,  70),
+        "grid_major": (130, 130, 130),
+        "label_fg":   (200, 200, 200),
+    },
+    "light": {
+        "viewer_bg":  [0.87, 0.87, 0.87, 1.0],
+        "grid_bg":    (215, 215, 215),
+        "grid_minor": (175, 175, 175),
+        "grid_major": (90,  90,  90),
+        "label_fg":   (50,  50,  50),
+    },
+}
+
 
 class MainWindow(QMainWindow):
     def __init__(self, app: QApplication, apply_theme_fn):
@@ -156,6 +173,7 @@ class MainWindow(QMainWindow):
     def _set_theme(self, theme: str):
         self._apply_theme(self._app, theme)
         QSettings("STLViewer", "MainWindow").setValue("theme", theme)
+        self._apply_scene_theme(theme)
 
     def _open_stl(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -166,9 +184,8 @@ class MainWindow(QMainWindow):
 
     def _toggle_grid(self, checked: bool):
         if checked:
-            grid = GridFloor(x_bounds=(-10,10), z_bounds=(-10,10),
-                             x_step=1.0, z_step=1.0, show_labels=False)
-            self._viewer.add_geometry("grid_floor", grid.geometry, grid.material)
+            theme = QSettings("STLViewer", "MainWindow").value("theme", "dark")
+            self._apply_scene_theme(theme)
         else:
             self._viewer.remove_geometry("grid_floor")
 
@@ -182,11 +199,23 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------- scene init
 
     def _load_scene(self):
-        grid = GridFloor(x_bounds=(-10,10), z_bounds=(-10,10),
-                         x_step=1.0, z_step=1.0, show_labels=False)
-        self._viewer.add_geometry("grid_floor", grid.geometry, grid.material)
+        theme = QSettings("STLViewer", "MainWindow").value("theme", "dark")
+        self._apply_scene_theme(theme)
         axis = AxisLines(length=0.25)
         self._viewer.add_geometry("axis", axis.geometry, axis.material)
+
+    def _apply_scene_theme(self, theme: str):
+        p = _THEME_PRESETS[theme]
+        self._viewer.set_background_color(p["viewer_bg"])
+        self._viewer.remove_geometry("grid_floor")
+        grid = GridFloor(
+            x_bounds=(-10, 10), z_bounds=(-10, 10),
+            x_step=1.0, z_step=1.0, show_labels=False,
+            bg_color=p["grid_bg"],
+            minor_color=p["grid_minor"],
+            major_color=p["grid_major"],
+        )
+        self._viewer.add_geometry("grid_floor", grid.geometry, grid.material)
 
     # --------------------------------------------------------- layout persist
 

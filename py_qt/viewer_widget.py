@@ -30,6 +30,13 @@ class Open3DViewerWidget(QWidget):
 
     # ------------------------------------------------------------------ public
 
+    def set_background_color(self, color: list):
+        self._bg_color = color
+        if self._renderer is not None:
+            self._renderer.scene.set_background(color)
+        self._dirty = True
+        self.update()
+
     def add_geometry(self, name, geometry, material=None):
         if material is None:
             material = rendering.MaterialRecord()

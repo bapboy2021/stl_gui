@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'qt_file/db_settings.ui'
+# Form implementation generated from reading ui file '/home/bap/Documents/app_dev/qt_designer/dialogs/db_settings.ui'
 #
 # Created by: PyQt6 UI code generator 6.11.0
 #

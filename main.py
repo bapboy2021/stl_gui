@@ -5,7 +5,7 @@ import sys
 import qdarktheme
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QSettings
-from py_qt.main_window import MainWindow
+from app.main_window import MainWindow
 
 
 def apply_theme(app: QApplication, theme: str):

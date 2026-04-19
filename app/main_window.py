@@ -5,8 +5,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QSize, QSettings
 from PyQt6.QtGui import QAction, QKeySequence, QActionGroup
 
-from py_qt.viewer_widget import Open3DViewerWidget
-from py_qt.panels import ToolsPanel, ScenePanel, PropertiesPanel
+from app.viewer_widget import Open3DViewerWidget
+from app.panels import ToolsPanel, ScenePanel, PropertiesPanel
 from custom_primitives import GridFloor, AxisLines
 
 _THEME_PRESETS = {

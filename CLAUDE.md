@@ -21,19 +21,25 @@ python main.py
 
 ## UI Files
 
-Qt Designer `.ui` files live in `qt_file/`. Compile them to Python before use:
+Qt Designer `.ui` sources live in `qt_designer/` and compile into `app/<group>/generated/<name>_ui.py`. Regenerate after editing a `.ui`:
 
 ```bash
-pyuic6 -x qt_file/main_win.ui -o py_qt/main_win.py
-pyuic6 -x qt_file/db_settings.ui -o py_qt/db_settings.py
+python tools/build_ui.py
 ```
+
+The build script walks `qt_designer/` recursively and mirrors the tree under `app/*/generated/`. Generated files are tracked in git so clones run without a build step.
 
 ## Architecture
 
-### UI Structure (`qt_file/`)
-- **`main_win.ui`** — Main window (920×766). Two tabs: "STL Manipulation" (active) and a placeholder Tab 2. The STL tab has two sections:
-  - **Rotation**: supports quaternion, Euler angles (configurable XYZ order), and 3×3 rotation matrix; input/output in radians or degrees
-  - **Translation**: X/Y/Z inputs with unit selectors; optional conversion to 4×4 homogeneous transformation matrix
+### UI layout
+Three roles per UI element:
+1. `qt_designer/<group>/<name>.ui` — design source, edited in Qt Designer
+2. `app/<group>/generated/<name>_ui.py` — auto-generated `Ui_<Name>` class; never hand-edit
+3. `app/<group>/<name>.py` — hand-written logic class using composition: `self.ui = Ui_<Name>(); self.ui.setupUi(self)`
+
+Current groups: `panels/` (tools, scene, properties) and `dialogs/` (db_settings).
+
+- **Main window** (`app/main_window.py`) — hand-coded `QMainWindow` with dockable panels; no `.ui` file.
 - **`db_settings.ui`** — Network/credentials dialog: IP, port, Test Connection button, and Sign In flow
 
 ### Expected Code Layout (not yet implemented)
